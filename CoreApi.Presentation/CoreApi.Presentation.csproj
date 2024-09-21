@@ -14,4 +14,8 @@
     <ProjectReference Include="..\CoreApi.WebFramwork\CoreApi.WebFramework.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Controllers\" />
+  </ItemGroup>
+
 </Project>
