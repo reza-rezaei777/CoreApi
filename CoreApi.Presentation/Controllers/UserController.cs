@@ -1,4 +1,6 @@
 ﻿using CoreApi.Entities;
+using CoreApi.WebFramework.Api;
+using CoreApi.WebFramework.Filters;
 using Data.Repositories;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -7,6 +9,7 @@ using Microsoft.EntityFrameworkCore;
 namespace MyApi.Controllers
 {
     [Route("api/[controller]")]
+    [ApiResultFilter]
     [ApiController]
     public class UserController : ControllerBase
     {
@@ -18,14 +21,14 @@ namespace MyApi.Controllers
         }
 
         [HttpGet]
-        public async Task<List<User>> Get(CancellationToken cancellationToken)
+        public async Task<ActionResult<List<User>>> Get(CancellationToken cancellationToken)
         {
             var users = await userRepository.TableNoTracking.ToListAsync(cancellationToken);
-            return users;
+            return Ok(users);
         }
 
         [HttpGet("{id:int}")]
-        public async Task<ActionResult<User>> Get(int id, CancellationToken cancellationToken)
+        public async Task<ApiResult<User>> Get(int id, CancellationToken cancellationToken)
         {
             var user = await userRepository.GetByIdAsync(cancellationToken, id);
             if (user == null)
@@ -34,7 +37,7 @@ namespace MyApi.Controllers
         }
 
         [HttpPost]
-        public async Task<ActionResult<User>> Create(User userDto, CancellationToken cancellationToken)
+        public async Task<ApiResult<User>> Create(User userDto, CancellationToken cancellationToken)
         {
             //var exists = await userRepository.TableNoTracking.AnyAsync(p => p.UserName == userDto.UserName);
             //if (exists)
@@ -52,7 +55,7 @@ namespace MyApi.Controllers
         }
 
         [HttpPut]
-        public async Task<ActionResult> Update(int id, User user, CancellationToken cancellationToken)
+        public async Task<ApiResult> Update(int id, User user, CancellationToken cancellationToken)
         {
             var updateUser = await userRepository.GetByIdAsync(cancellationToken, id);
 
@@ -70,7 +73,7 @@ namespace MyApi.Controllers
         }
 
         [HttpDelete]
-        public async Task<ActionResult> Delete(int id, CancellationToken cancellationToken)
+        public async Task<ApiResult> Delete(int id, CancellationToken cancellationToken)
         {
             var user = await userRepository.GetByIdAsync(cancellationToken, id);
             await userRepository.DeleteAsync(user, cancellationToken);
