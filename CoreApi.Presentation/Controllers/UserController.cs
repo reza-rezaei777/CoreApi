@@ -1,4 +1,5 @@
 ﻿using CoreApi.Entities;
+using CoreApi.Presentation.Models;
 using CoreApi.WebFramework.Api;
 using CoreApi.WebFramework.Filters;
 using Data.Repositories;
@@ -37,7 +38,7 @@ namespace MyApi.Controllers
         }
 
         [HttpPost]
-        public async Task<ApiResult<User>> Create(User userDto, CancellationToken cancellationToken)
+        public async Task<ApiResult<User>> Create(UserDto userDto, CancellationToken cancellationToken)
         {
             //var exists = await userRepository.TableNoTracking.AnyAsync(p => p.UserName == userDto.UserName);
             //if (exists)
@@ -50,7 +51,7 @@ namespace MyApi.Controllers
                 Gender = userDto.Gender,
                 UserName = userDto.UserName
             };
-            await userRepository.AddAsync(user, userDto.PasswordHash, cancellationToken);
+            await userRepository.AddAsync(user, userDto.Password, cancellationToken);
             return user;
         }
 
