@@ -1,6 +1,7 @@
 ﻿using CoreApi.WebFramework.Api;
 using Microsoft.AspNetCore.Mvc.Filters;
 using Microsoft.AspNetCore.Mvc;
+using CoreApi.Domin.Enums;
 namespace CoreApi.WebFramework.Filters
 {
     public class ApiResultFilterAttribute : ActionFilterAttribute

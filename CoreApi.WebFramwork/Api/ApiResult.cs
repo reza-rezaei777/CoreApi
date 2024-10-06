@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
 using Common.Utilities;
+using CoreApi.Domin.Enums;
 namespace CoreApi.WebFramework.Api
 {
     public class ApiResult
@@ -113,12 +114,5 @@ namespace CoreApi.WebFramework.Api
         #endregion
     }
 
-    public enum ApiResultStatusCode : byte
-    {
-        Success=0,
-        ServerError=1,
-        BadRequest=2,
-        NotFound=3,
-        ListEmpty=4,
-    }
+
 }
