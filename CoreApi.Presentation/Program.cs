@@ -1,5 +1,7 @@
 using CoreApi.DataLayer;
+using CoreApi.WebFramework.Middlewares;
 using Data.Repositories;
+using ElmahCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 
@@ -17,17 +19,20 @@ builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped(typeof(IRepository<>),typeof(Repository<>));
 
 builder.Services.AddControllers();
+builder.Services.AddElmah();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
+app.UseMiddleware<CustomExceptionHandlerMiddleware>();
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
 }
+app.UseElmah();
 
 app.UseHttpsRedirection();
 
