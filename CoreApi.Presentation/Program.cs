@@ -3,9 +3,11 @@ using CoreApi.WebFramework.Middlewares;
 using Data.Repositories;
 using ElmahCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Configuration;
+using NLog.Web;
 
 var builder = WebApplication.CreateBuilder(args);
+builder.Logging.ClearProviders();
+builder.Host.UseNLog();
 
 // Add services to the container.
 //Add a sql server
@@ -19,7 +21,12 @@ builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped(typeof(IRepository<>),typeof(Repository<>));
 
 builder.Services.AddControllers();
-builder.Services.AddElmah();
+builder.Services.AddElmah(options =>
+{
+    options.Path = "/elmah-errors";
+    options.ConnectionString = builder.Configuration.GetConnectionString("SqlServer");
+
+});
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
