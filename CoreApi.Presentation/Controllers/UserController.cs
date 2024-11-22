@@ -1,5 +1,7 @@
-﻿using CoreApi.Entities;
+﻿using CoreApi.Domin.Exceptions;
+using CoreApi.Entities;
 using CoreApi.Presentation.Models;
+using CoreApi.Services.Services;
 using CoreApi.WebFramework.Api;
 using CoreApi.WebFramework.Filters;
 using Data.Repositories;
@@ -14,24 +16,34 @@ namespace MyApi.Controllers
     [ApiController]
     public class UserController : ControllerBase
     {
-        private readonly IUserRepository userRepository;
+        private readonly IUserRepository _userRepository;
+        private readonly IJwtService _jwtService;
 
-        public UserController(IUserRepository userRepository)
+        public UserController(IUserRepository userRepository, IJwtService jwtService)
         {
-            this.userRepository = userRepository;
+            _userRepository = userRepository;
+            _jwtService = jwtService;
         }
 
         [HttpGet]
         public async Task<ActionResult<List<User>>> Get(CancellationToken cancellationToken)
         {
-            var users = await userRepository.TableNoTracking.ToListAsync(cancellationToken);
+            var users = await _userRepository.TableNoTracking.ToListAsync(cancellationToken);
             return Ok(users);
+        }
+        [HttpGet("[action]")]
+        public async Task<string> Token(string username, string password, CancellationToken cancellationToken)
+        {
+            var user = await _userRepository.GetByUserAndPass(username, password, cancellationToken);
+            if (user == null) throw new BadRequestException("نام کاربر یا پسورد اشتباه است");
+            var jwt = _jwtService.Generate(user);
+            return jwt;
         }
 
         [HttpGet("{id:int}")]
         public async Task<ApiResult<User>> Get(int id, CancellationToken cancellationToken)
         {
-            var user = await userRepository.GetByIdAsync(cancellationToken, id);
+            var user = await _userRepository.GetByIdAsync(cancellationToken, id);
             if (user == null)
                 return NotFound();
             return user;
@@ -51,14 +63,14 @@ namespace MyApi.Controllers
                 Gender = userDto.Gender,
                 UserName = userDto.UserName
             };
-            await userRepository.AddAsync(user, userDto.Password, cancellationToken);
+            await _userRepository.AddAsync(user, userDto.Password, cancellationToken);
             return user;
         }
 
         [HttpPut]
         public async Task<ApiResult> Update(int id, User user, CancellationToken cancellationToken)
         {
-            var updateUser = await userRepository.GetByIdAsync(cancellationToken, id);
+            var updateUser = await _userRepository.GetByIdAsync(cancellationToken, id);
 
             updateUser.UserName = user.UserName;
             updateUser.PasswordHash = user.PasswordHash;
@@ -68,7 +80,7 @@ namespace MyApi.Controllers
             updateUser.IsActive = user.IsActive;
             updateUser.LastLoginDate = user.LastLoginDate;
 
-            await userRepository.UpdateAsync(updateUser, cancellationToken);
+            await _userRepository.UpdateAsync(updateUser, cancellationToken);
 
             return Ok();
         }
@@ -76,8 +88,8 @@ namespace MyApi.Controllers
         [HttpDelete]
         public async Task<ApiResult> Delete(int id, CancellationToken cancellationToken)
         {
-            var user = await userRepository.GetByIdAsync(cancellationToken, id);
-            await userRepository.DeleteAsync(user, cancellationToken);
+            var user = await _userRepository.GetByIdAsync(cancellationToken, id);
+            await _userRepository.DeleteAsync(user, cancellationToken);
 
             return Ok();
         }

@@ -9,6 +9,7 @@
   <ItemGroup>
     <PackageReference Include="elmah.sqlserver" Version="1.2.0" />
     <PackageReference Include="ElmahCore" Version="2.1.2" />
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="8.0.0" />
     <PackageReference Include="Microsoft.AspNetCore.Mvc.Core" Version="2.2.5" />
     <PackageReference Include="Microsoft.AspNetCore.Mvc.Formatters.Json" Version="2.2.0" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />

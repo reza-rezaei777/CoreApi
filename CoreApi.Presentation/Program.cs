@@ -1,4 +1,5 @@
 using CoreApi.DataLayer;
+using CoreApi.Services.Services;
 using CoreApi.WebFramework.Middlewares;
 using Data.Repositories;
 using ElmahCore.Mvc;
@@ -17,15 +18,16 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
 });
 
 //register service
+builder.Services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
 builder.Services.AddScoped<IUserRepository, UserRepository>();
-builder.Services.AddScoped(typeof(IRepository<>),typeof(Repository<>));
+builder.Services.AddScoped<IJwtService, JwtService>();
+builder.Services.AddJwtAuthentication();
 
 builder.Services.AddControllers();
 builder.Services.AddElmah(options =>
 {
     options.Path = "/elmah-errors";
     options.ConnectionString = builder.Configuration.GetConnectionString("SqlServer");
-
 });
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
