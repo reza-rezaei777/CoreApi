@@ -1,8 +1,10 @@
 using CoreApi.DataLayer;
 using CoreApi.Services.Services;
+using CoreApi.WebFramework.Configuration;
 using CoreApi.WebFramework.Middlewares;
 using Data.Repositories;
 using ElmahCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Authorization;
 using Microsoft.EntityFrameworkCore;
 using NLog.Web;
 
@@ -17,6 +19,11 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("SqlServer"));
 });
 
+builder.Services.AddMvc(options =>
+{
+    options.Filters.Add(new AuthorizeFilter());
+});
+
 //register service
 builder.Services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
 builder.Services.AddScoped<IUserRepository, UserRepository>();
@@ -28,6 +35,11 @@ builder.Services.AddElmah(options =>
 {
     options.Path = "/elmah-errors";
     options.ConnectionString = builder.Configuration.GetConnectionString("SqlServer");
+    //options.OnPermissionCheck = httpcontext =>
+    //{
+    //    return httpcontext.User.Identity.IsAuthenticated;
+     
+    //};
 });
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
@@ -44,7 +56,7 @@ if (app.Environment.IsDevelopment())
 app.UseElmah();
 
 app.UseHttpsRedirection();
-
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
