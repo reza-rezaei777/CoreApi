@@ -1,4 +1,5 @@
 using CoreApi.DataLayer;
+using CoreApi.Domin;
 using CoreApi.Services.Services;
 using CoreApi.WebFramework.Configuration;
 using CoreApi.WebFramework.Middlewares;
@@ -11,7 +12,9 @@ using NLog.Web;
 var builder = WebApplication.CreateBuilder(args);
 builder.Logging.ClearProviders();
 builder.Host.UseNLog();
+var siteSettings = builder.Configuration.GetSection(nameof(SiteSettings)).Get<SiteSettings>();
 
+builder.Services.Configure<SiteSettings>(builder.Configuration.GetSection(nameof(SiteSettings)));
 // Add services to the container.
 //Add a sql server
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
@@ -28,12 +31,12 @@ builder.Services.AddMvc(options =>
 builder.Services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IJwtService, JwtService>();
-builder.Services.AddJwtAuthentication();
+builder.Services.AddJwtAuthentication(siteSettings.JWTSettings);
 
 builder.Services.AddControllers();
 builder.Services.AddElmah(options =>
 {
-    options.Path = "/elmah-errors";
+    options.Path= siteSettings.ElmahPath;
     options.ConnectionString = builder.Configuration.GetConnectionString("SqlServer");
     //options.OnPermissionCheck = httpcontext =>
     //{

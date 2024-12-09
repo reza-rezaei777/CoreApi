@@ -1,4 +1,6 @@
-﻿using CoreApi.Entities;
+﻿using CoreApi.Domin;
+using CoreApi.Entities;
+using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
@@ -8,19 +10,28 @@ namespace CoreApi.Services.Services
 {
     public class JwtService : IJwtService
     {
+        private readonly SiteSettings _siteSettings;
+        public JwtService(IOptionsSnapshot<SiteSettings> options)
+        {
+            _siteSettings=options.Value;
+        }
         public string Generate(User user)
         {
-            var securitykey = Encoding.UTF8.GetBytes("mySecretkey12345678922");// longer than 16 character
+            var securitykey = Encoding.UTF8.GetBytes(_siteSettings.JWTSettings.SecretKey);// longer than 16 character
             var signingcredentials = new SigningCredentials(new SymmetricSecurityKey(securitykey), SecurityAlgorithms.HmacSha256Signature);
+            var encriptkey = Encoding.UTF8.GetBytes(_siteSettings.JWTSettings.EncrypKey);
+            var encryptingCredentials = new EncryptingCredentials(new SymmetricSecurityKey(encriptkey), SecurityAlgorithms.Aes128KW, SecurityAlgorithms.Aes128CbcHmacSha256);
+            
             var cliams = _getClaims(user);
             var descriptor = new SecurityTokenDescriptor
             {
-                Issuer = "myself",
-                Audience = "myself",
-                IssuedAt = DateTime.Now,
-                NotBefore = DateTime.Now,
-                Expires = DateTime.Now.AddHours(1),
+                Issuer = _siteSettings.JWTSettings.Issuer,
+                Audience = _siteSettings.JWTSettings.Audience,
+                IssuedAt =DateTime.Now,
+                NotBefore = DateTime.Now.AddMinutes(_siteSettings.JWTSettings.NotBeforeMinutes),
+                Expires = DateTime.Now.AddMinutes(_siteSettings.JWTSettings.ExpirationMinutes),
                 SigningCredentials = signingcredentials,
+                EncryptingCredentials=encryptingCredentials,
                 Subject = new ClaimsIdentity(cliams)
             };
             JwtSecurityTokenHandler.DefaultInboundClaimTypeMap.Clear();
