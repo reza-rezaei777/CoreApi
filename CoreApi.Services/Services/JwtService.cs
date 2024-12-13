@@ -1,5 +1,6 @@
 ﻿using CoreApi.Domin;
 using CoreApi.Entities;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
@@ -46,10 +47,12 @@ namespace CoreApi.Services.Services
         }
         private IEnumerable<Claim> _getClaims(User user)
         {
+            var SecurityStampClaimType = new ClaimsIdentityOptions().SecurityStampClaimType;
             var list = new List<Claim>()
             {
                 new Claim(ClaimTypes.Name,user.UserName),
                 new Claim(ClaimTypes.NameIdentifier,user.ID.ToString()),
+                new Claim(SecurityStampClaimType,user.SecurityStamp.ToString()),
             };
             var roles = new Role[] { new Role { Name = "Admin" } };
             foreach (var role in roles)
