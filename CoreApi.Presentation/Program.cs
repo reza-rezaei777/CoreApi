@@ -21,7 +21,7 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
 {
     options.UseSqlServer(builder.Configuration.GetConnectionString("SqlServer"));
 });
-
+builder.Services.AddCustomIdentity(siteSettings.IdentitySettings);
 builder.Services.AddMvc(options =>
 {
     options.Filters.Add(new AuthorizeFilter());

@@ -1,14 +1,26 @@
 ﻿using Common.Utilities;
+using CoreApi.Entities;
+using CoreApi.Entities.Domin;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using System.Reflection;
 
 namespace CoreApi.DataLayer
 {
-    public class ApplicationDbContext : DbContext
+    public class ApplicationDbContext : IdentityDbContext<User,Role,int>
     {
         public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : base(options) { }
-        
 
+        protected override void OnModelCreating(ModelBuilder builder)
+        {
+            base.OnModelCreating(builder);
+            var entitiesAssembly=typeof(IEntity).Assembly;
+            builder.RegisterAllEntities<IEntity>(entitiesAssembly);
+            builder.RegisterEntityTypeConfiguration(entitiesAssembly);
+            builder.AddRestrictDeleteBehaviorConvention();
+            builder.AddSequentialGuidForIdConvention();
+            builder.AddPluralizingTableNameConvention();
+        }
         public override int SaveChanges()
         {
             _cleanString();

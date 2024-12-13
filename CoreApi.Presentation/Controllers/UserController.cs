@@ -5,6 +5,7 @@ using CoreApi.Services.Services;
 using CoreApi.WebFramework.Api;
 using CoreApi.WebFramework.Filters;
 using Data.Repositories;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -18,11 +19,17 @@ namespace MyApi.Controllers
     {
         private readonly IUserRepository _userRepository;
         private readonly IJwtService _jwtService;
+        private readonly UserManager<User> _userManager;
+        private readonly RoleManager<Role> _roleManager;
+        private readonly SignInManager<User> _signInManager;
 
-        public UserController(IUserRepository userRepository, IJwtService jwtService)
+        public UserController(IUserRepository userRepository, IJwtService jwtService, UserManager<User> userManager, RoleManager<Role> roleManager, SignInManager<User> signInManager)
         {
             _userRepository = userRepository;
             _jwtService = jwtService;
+            _userManager = userManager;
+            _roleManager = roleManager;
+            _signInManager = signInManager;
         }
 
         [HttpGet]
@@ -34,9 +41,14 @@ namespace MyApi.Controllers
         [HttpGet("[action]")]
         public async Task<string> Token(string username, string password, CancellationToken cancellationToken)
         {
-            var user = await _userRepository.GetByUserAndPass(username, password, cancellationToken);
-            if (user == null) throw new BadRequestException("نام کاربر یا پسورد اشتباه است");
-            var jwt = _jwtService.Generate(user);
+            //var user = await _userRepository.GetByUserAndPass(username, password, cancellationToken);
+            var user =await _userManager.FindByNameAsync(username);
+            if (user == null) throw new BadRequestException("نام کاربر است");
+            var isvalidpassword = await _userManager.CheckPasswordAsync(user, password);
+            if (!isvalidpassword) throw new BadRequestException("پسورد اشتباه است");
+
+
+            var jwt =await _jwtService.GenerateAsync(user);
             return jwt;
         }
 
@@ -61,8 +73,18 @@ namespace MyApi.Controllers
                 Age = userDto.Age,
                 FullName = userDto.FullName,
                 Gender = userDto.Gender,
-                UserName = userDto.UserName
+                UserName = userDto.UserName,
+                Email= userDto.Email
             };
+            var resultuser = await _userManager.CreateAsync(user, user.PasswordHash);
+
+            var resultrole = _roleManager.CreateAsync(new Role
+            {
+                Name = "admin",
+                Desciption = "adminRole"
+            });
+
+            var resultuserrole = await _userManager.AddToRoleAsync(user, "Admin");
             await _userRepository.AddAsync(user, userDto.Password, cancellationToken);
             return user;
         }

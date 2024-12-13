@@ -64,7 +64,7 @@ namespace CoreApi.WebFramework.Configuration
                     },
                     OnTokenValidated = async context =>
                     {
-                       // var signInManager = context.HttpContext.RequestServices.GetRequiredService<SignInManager<User>>();
+                        var signInManager = context.HttpContext.RequestServices.GetRequiredService<SignInManager<User>>();
                         var userRepository = context.HttpContext.RequestServices.GetRequiredService<IUserRepository>();
 
                         var claimsIdentity = context.Principal.Identity as ClaimsIdentity;
@@ -79,12 +79,12 @@ namespace CoreApi.WebFramework.Configuration
                         var userId = claimsIdentity.GetUserId<int>();
                         var user = await userRepository.GetByIdAsync(context.HttpContext.RequestAborted, userId);
 
-                        if (user.SecurityStamp != Guid.Parse(securityStamp))
-                            context.Fail("Token security stamp is not valid.");
-
-                        //var validatedUser = await signInManager.ValidateSecurityStampAsync(context.Principal);
-                        //if (validatedUser == null)
+                        //if (user.SecurityStamp != Guid.Parse(securityStamp))
                         //    context.Fail("Token security stamp is not valid.");
+
+                        var validatedUser = await signInManager.ValidateSecurityStampAsync(context.Principal);
+                        if (validatedUser == null)
+                            context.Fail("Token security stamp is not valid.");
 
                         if (!user.IsActive)
                             context.Fail("User is not active.");

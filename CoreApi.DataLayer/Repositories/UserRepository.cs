@@ -27,11 +27,11 @@ namespace Data.Repositories
             user.PasswordHash = passwordHash;
             await base.AddAsync(user, cancellationToken);
         }
-        public Task UpdateSecurityStampt(User user, CancellationToken cancellationToken)
-        {
-            user.SecurityStamp = Guid.NewGuid();
-            return base.UpdateAsync(user, cancellationToken);
-        }
+        //public Task UpdateSecurityStampt(User user, CancellationToken cancellationToken)
+        //{
+        //    user.SecurityStamp = Guid.NewGuid();
+        //    return base.UpdateAsync(user, cancellationToken);
+        //}
         public Task UpdateLastLoginDateAsync(User user, CancellationToken cancellationToken) 
         {
             user.LastLoginDate=DateTimeOffset.Now;

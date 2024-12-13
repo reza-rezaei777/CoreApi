@@ -12,27 +12,30 @@ namespace CoreApi.Services.Services
     public class JwtService : IJwtService
     {
         private readonly SiteSettings _siteSettings;
-        public JwtService(IOptionsSnapshot<SiteSettings> options)
+        private readonly SignInManager<User> _signInManager;
+
+        public JwtService(IOptionsSnapshot<SiteSettings> options, SignInManager<User> signInManager)
         {
-            _siteSettings=options.Value;
+            _siteSettings = options.Value;
+            _signInManager = signInManager;
         }
-        public string Generate(User user)
+        public async Task<string> GenerateAsync(User user)
         {
             var securitykey = Encoding.UTF8.GetBytes(_siteSettings.JWTSettings.SecretKey);// longer than 16 character
             var signingcredentials = new SigningCredentials(new SymmetricSecurityKey(securitykey), SecurityAlgorithms.HmacSha256Signature);
             var encriptkey = Encoding.UTF8.GetBytes(_siteSettings.JWTSettings.EncrypKey);
             var encryptingCredentials = new EncryptingCredentials(new SymmetricSecurityKey(encriptkey), SecurityAlgorithms.Aes128KW, SecurityAlgorithms.Aes128CbcHmacSha256);
-            
-            var cliams = _getClaims(user);
+
+            var cliams = await _getClaimsAsync(user);
             var descriptor = new SecurityTokenDescriptor
             {
                 Issuer = _siteSettings.JWTSettings.Issuer,
                 Audience = _siteSettings.JWTSettings.Audience,
-                IssuedAt =DateTime.Now,
+                IssuedAt = DateTime.Now,
                 NotBefore = DateTime.Now.AddMinutes(_siteSettings.JWTSettings.NotBeforeMinutes),
                 Expires = DateTime.Now.AddMinutes(_siteSettings.JWTSettings.ExpirationMinutes),
                 SigningCredentials = signingcredentials,
-                EncryptingCredentials=encryptingCredentials,
+                EncryptingCredentials = encryptingCredentials,
                 Subject = new ClaimsIdentity(cliams)
             };
             JwtSecurityTokenHandler.DefaultInboundClaimTypeMap.Clear();
@@ -45,21 +48,26 @@ namespace CoreApi.Services.Services
             return token;
 
         }
-        private IEnumerable<Claim> _getClaims(User user)
+        private async Task<IEnumerable<Claim>> _getClaimsAsync(User user)
         {
-            var SecurityStampClaimType = new ClaimsIdentityOptions().SecurityStampClaimType;
-            var list = new List<Claim>()
-            {
-                new Claim(ClaimTypes.Name,user.UserName),
-                new Claim(ClaimTypes.NameIdentifier,user.ID.ToString()),
-                new Claim(SecurityStampClaimType,user.SecurityStamp.ToString()),
-            };
-            var roles = new Role[] { new Role { Name = "Admin" } };
-            foreach (var role in roles)
-            {
-                list.Add(new Claim(ClaimTypes.Role, role.Name));
-            }
+            var result = await _signInManager.ClaimsFactory.CreateAsync(user);
+            //AddCustome
+            var list=new List<Claim>(result.Claims);
+            list.Add(new Claim(ClaimTypes.MobilePhone, "00"));
             return list;
+            //var SecurityStampClaimType = new ClaimsIdentityOptions().SecurityStampClaimType;
+            //var list = new List<Claim>()
+            //{
+            //    new Claim(ClaimTypes.Name,user.UserName),
+            //    new Claim(ClaimTypes.NameIdentifier,user.ID.ToString()),
+            //    new Claim(SecurityStampClaimType,user.SecurityStamp.ToString()),
+            //};
+            //var roles = new Role[] { new Role { Name = "Admin" } };
+            //foreach (var role in roles)
+            //{
+            //    list.Add(new Claim(ClaimTypes.Role, role.Name));
+            //}
+            //return list;
         }
     }
 }

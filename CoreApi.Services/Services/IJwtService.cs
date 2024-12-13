@@ -4,6 +4,6 @@ namespace CoreApi.Services.Services
 {
     public interface IJwtService
     {
-        string Generate(User user);
+        Task<string> GenerateAsync(User user);
     }
 }
