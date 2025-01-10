@@ -1,10 +1,11 @@
 ﻿using Common.Utilities;
 using CoreApi.DataLayer;
+using CoreApi.Domin;
 using CoreApi.Entities;
 using Microsoft.EntityFrameworkCore;
 namespace Data.Repositories
 {
-    public class UserRepository : Repository<User>, IUserRepository
+    public class UserRepository : Repository<User>, IUserRepository, IScopedDependency
     {
         public UserRepository(ApplicationDbContext dbContext)
             : base(dbContext)

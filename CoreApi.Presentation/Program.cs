@@ -1,13 +1,12 @@
-using CoreApi.DataLayer;
+using Autofac;
+using Autofac.Extensions.DependencyInjection;
 using CoreApi.Domin;
-using CoreApi.Services.Services;
 using CoreApi.WebFramework.Configuration;
 using CoreApi.WebFramework.Middlewares;
 using Data.Repositories;
 using ElmahCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Authorization;
-using Microsoft.EntityFrameworkCore;
 using NLog.Web;
+
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Logging.ClearProviders();
@@ -15,53 +14,46 @@ builder.Host.UseNLog();
 var siteSettings = builder.Configuration.GetSection(nameof(SiteSettings)).Get<SiteSettings>();
 
 builder.Services.Configure<SiteSettings>(builder.Configuration.GetSection(nameof(SiteSettings)));
-// Add services to the container.
-//Add a sql server
-builder.Services.AddDbContext<ApplicationDbContext>(options =>
-{
-    options.UseSqlServer(builder.Configuration.GetConnectionString("SqlServer"));
-});
-builder.Services.AddCustomIdentity(siteSettings.IdentitySettings);
-builder.Services.AddMvc(options =>
-{
-    options.Filters.Add(new AuthorizeFilter());
-});
+// Add services to the container:
 
+//Add a sql server
+builder.Services.AddDbContext(builder.Configuration);
+//Add Identity
+builder.Services.AddCustomIdentity(siteSettings.IdentitySettings);
+//Add MVC
+builder.Services.AddMinimalMvc();
 //register service
 builder.Services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
-builder.Services.AddScoped<IUserRepository, UserRepository>();
-builder.Services.AddScoped<IJwtService, JwtService>();
+
+//AddElmah 
+builder.Services.AddElmah(builder.Configuration, siteSettings);
+//Add Jwt
 builder.Services.AddJwtAuthentication(siteSettings.JWTSettings);
 
-builder.Services.AddControllers();
-builder.Services.AddElmah(options =>
-{
-    options.Path= siteSettings.ElmahPath;
-    options.ConnectionString = builder.Configuration.GetConnectionString("SqlServer");
-    //options.OnPermissionCheck = httpcontext =>
-    //{
-    //    return httpcontext.User.Identity.IsAuthenticated;
-     
-    //};
-});
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+
+
+// Replace the default DI container with Autofac
+builder.Host.UseServiceProviderFactory(new AutofacServiceProviderFactory());
+// Configure Autofac container
+builder.Host.ConfigureContainer<ContainerBuilder>(containerBuilder =>
+{
+    // Centralized Autofac service registration
+    containerBuilder.AddServices();
+});
+
+
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
 app.UseMiddleware<CustomExceptionHandlerMiddleware>();
-if (app.Environment.IsDevelopment())
-{
-    app.UseSwagger();
-    app.UseSwaggerUI();
-}
+app.UseHsts(app.Environment);
 app.UseElmah();
-
 app.UseHttpsRedirection();
 app.UseAuthentication();
 app.UseAuthorization();
-
 app.MapControllers();
-
 app.Run();

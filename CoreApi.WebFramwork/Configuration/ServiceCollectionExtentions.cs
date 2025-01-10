@@ -1,12 +1,18 @@
 ﻿using Common;
 using Common.Utilities;
+using CoreApi.DataLayer;
 using CoreApi.Domin;
 using CoreApi.Domin.Enums;
 using CoreApi.Domin.Exceptions;
 using CoreApi.Entities;
 using Data.Repositories;
+using ElmahCore.Mvc;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Authorization;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
 using System.Net;
@@ -38,12 +44,12 @@ namespace CoreApi.WebFramework.Configuration
                     IssuerSigningKey = new SymmetricSecurityKey(secretkey),
                     RequireExpirationTime = true,
                     ValidateLifetime = true,
-                    ValidateAudience=true,
-                    ValidAudience=jWTSettings.Audience,
-                    ValidateIssuer=true,
-                    ValidIssuer=jWTSettings.Issuer,
-                    TokenDecryptionKey=new SymmetricSecurityKey(encrypttkey)
-                
+                    ValidateAudience = true,
+                    ValidAudience = jWTSettings.Audience,
+                    ValidateIssuer = true,
+                    ValidIssuer = jWTSettings.Issuer,
+                    TokenDecryptionKey = new SymmetricSecurityKey(encrypttkey)
+
 
 
                 };
@@ -106,5 +112,48 @@ namespace CoreApi.WebFramework.Configuration
             });
 
         }
+
+        public static void AddDbContext(this IServiceCollection services, IConfiguration configuration)
+        {
+            services.AddDbContext<ApplicationDbContext>(options =>
+            {
+                options.UseSqlServer(configuration.GetConnectionString("SqlServer"));
+            });
+        }
+
+        public static void AddMinimalMvc(this IServiceCollection services)
+        {
+            services.AddMvcCore(options =>
+            {
+                options.Filters.Add(new AuthorizeFilter());
+            })
+            .AddApiExplorer()
+            .AddAuthorization()
+            .AddFormatterMappings()
+            .AddDataAnnotations()
+            .AddCors()
+            .SetCompatibilityVersion(CompatibilityVersion.Version_2_1)
+            .AddJsonOptions(jsonOptions =>
+            {
+                // Configure JSON options here (if needed)
+              //  jsonOptions.JsonSerializerOptions.PropertyNamingPolicy = null; // Example: Disable camel case
+            });
+
+        }
+
+        public static void AddElmah(this IServiceCollection services, IConfiguration configuration,SiteSettings siteSettings)
+        {
+            services.AddElmah(options =>
+            {
+                options.Path = siteSettings.ElmahPath;
+                options.ConnectionString = configuration.GetConnectionString("SqlServer");
+                //options.OnPermissionCheck = httpcontext =>
+                //{
+                //    return httpcontext.User.Identity.IsAuthenticated;
+
+                //};
+            });
+        }
+
     }
 }

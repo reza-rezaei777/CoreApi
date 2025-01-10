@@ -1,12 +1,13 @@
 ﻿using Common.Utilities;
 using CoreApi.DataLayer;
+using CoreApi.Domin;
 using CoreApi.Entities.Domin;
 using Microsoft.EntityFrameworkCore;
 using System.Linq.Expressions;
 
 namespace Data.Repositories
 {
-    public class Repository<TEntity> : IRepository<TEntity>
+    public class Repository<TEntity> : IRepository<TEntity>, IScopedDependency
         where TEntity : class, IEntity
     {
         protected readonly ApplicationDbContext DbContext;
